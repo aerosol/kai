@@ -1,0 +1,10 @@
+deps
+log
+logs
+sys.config
+*.beam
+.DS_Store
+erl_crash.dump
+tags
+release
+_rel

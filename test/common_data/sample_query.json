@@ -1,0 +1,48 @@
+{
+  "start_absolute": 1357023600000,
+  "end_relative": {
+    "value": 5,
+    "unit": "days"
+  },
+  "metrics": [
+    {
+      "name": "abc.123",
+      "limit": 1000,
+      "tags": {
+        "host": [
+          "foo",
+          "foo2"
+        ],
+        "customer": ["bar"]
+      },
+      "aggregators": [
+        {
+          "name": "sum",
+          "sampling": {
+            "value": 10,
+            "unit": "minutes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "xyz.123",
+      "tags": {
+        "host": [
+          "foo",
+          "foo2"
+        ],
+        "customer": ["bar"]
+      },
+      "aggregators": [
+        {
+          "name": "avg",
+          "sampling": {
+            "value": 10,
+            "unit": "minutes"
+          }
+        }
+      ]
+    }
+  ]
+}
