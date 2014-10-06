@@ -51,7 +51,7 @@ stop(Conn) ->
     gen_fsm:sync_send_all_state_event(Conn, shutdown).
 
 put_metric(Conn, M, TS, V, Tags) when is_pid(Conn) ->
-    gen_fsm:send_event(Conn, {put_metric, {M, TS, V, Tags}}).
+    gen_fsm:sync_send_event(Conn, {put_metric, {M, TS, V, Tags}}).
 
 version(Conn) ->
     gen_fsm:sync_send_event(Conn, version).
@@ -99,10 +99,6 @@ connecting(_Event, _From, State) ->
     Reply = {error, connecting},
     {reply, Reply, connecting, State}.
 
-connected({put_metric = Cmd, {M, TS, V, Tags}}, S1) ->
-    Raw = kai_telnet:Cmd(M, TS, V, Tags),
-    ok = send(Raw, S1),
-    {next_state, connected, S1};
 connected(ping, S1) ->
     lager:debug("KairosDB: PING"),
     {ok, {kairosdb, _}} = kairos_version(S1),
@@ -114,6 +110,10 @@ connected(_, S1) ->
 
 connected(version, _From, S1) ->
     Reply = kairos_version(S1),
+    {reply, Reply, connected, S1};
+connected({put_metric = Cmd, {M, TS, V, Tags}}, _From, S1) ->
+    Raw = kai_proto:Cmd(M, TS, V, Tags),
+    Reply = send(Raw, S1),
     {reply, Reply, connected, S1};
 connected(_Event, _From, State) ->
     Reply = {error, unknown_call},
