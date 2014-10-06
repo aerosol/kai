@@ -83,18 +83,20 @@ t_encode_put(_) ->
     R = kai_proto:put_metric(<<"hello_metric">>, 1234, 10.0,
                              [{<<"tag1">>, <<"v1">>},
                               {<<"tag2">>, <<"v2">>}]),
-    <<"put hello_metric 1234 10.0 tag1=v1 tag2=v2\n">> = R.
+    O = iolist_to_binary(R),
+    <<"put hello_metric 1234 10.0 tag1=v1 tag2=v2\n">> = O.
 
 t_encode_put_no_tags(_) ->
     R = kai_proto:put_metric(<<"hello_metric">>, 1234, 10.0),
-    <<"put hello_metric 1234 10.0\n">> = R.
+    O = iolist_to_binary(R),
+    <<"put hello_metric 1234 10.0\n">> = O.
 
 t_encode_put_int(_) ->
     R = kai_proto:put_metric(<<"hello_metric">>, 1234, 10),
-    <<"put hello_metric 1234 10\n">> = R.
+    O = iolist_to_binary(R),
+    <<"put hello_metric 1234 10\n">> = O.
 
 t_encode_version(_) ->
-    <<"version\n">> = kai_proto:version().
 
 t_fetch_version(_) ->
     case kai:kairosdb_version() of
@@ -103,3 +105,4 @@ t_fetch_version(_) ->
         {error, {kairosdb, R}} ->
             {skip, R}
     end.
+    <<"version\n">> = iolist_to_binary(kai_proto:version()).
