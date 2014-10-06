@@ -11,7 +11,6 @@
          t_encode_put_no_tags/1,
          t_encode_put_int/1,
          t_encode_version/1]).
-         %% FIXME t_fetch_version/1]).
 
 -define(q, kai_q).
 -define(th, test_helpers).
@@ -97,12 +96,4 @@ t_encode_put_int(_) ->
     <<"put hello_metric 1234 10\n">> = O.
 
 t_encode_version(_) ->
-
-t_fetch_version(_) ->
-    case kai:kairosdb_version() of
-        {ok, {kairosdb, _V}} ->
-            ok;
-        {error, {kairosdb, R}} ->
-            {skip, R}
-    end.
     <<"version\n">> = iolist_to_binary(kai_proto:version()).
