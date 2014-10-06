@@ -43,7 +43,7 @@
       - [x] list tag names
       - [x] list tag values
       - [ ] query metrics
-          - [ ] query builde api - stable (improvements pedning)
+          - [ ] query builder api - stable (improvements pending)
           - [ ] aggregates:
               - [x] avg
               - [x] sum
