@@ -109,8 +109,8 @@ avg(Metric, {_V, _U}=Sampling) ->
     jsx:json_term() | {error, no_metrics}.
 compose(_Q, []) ->
     {error, no_metrics};
-compose(Q, #q_metric{}) ->
-    compose(Q, [#q_metric{}]);
+compose(Q, #q_metric{}=M) ->
+    compose(Q, [M]);
 compose(Q, Metrics) when is_list(Metrics) ->
     to_json(Q#q{metrics = Metrics}).
 

@@ -5,6 +5,7 @@
          all/0,
          t_build_query_from_kairos_docs/1,
          t_p_query_is_always_valid_json/1,
+         t_prop_always_json/1,
          t_kai_proto_typespecs/1,
          t_kai_q_typespecs/1,
          t_encode_put/1,
@@ -17,7 +18,7 @@
 
 -include_lib("proper/include/proper.hrl").
 
--define(NUMTESTS, 100).
+-define(NUMTESTS, 1000).
 -define(PROPTEST(A), true = proper:quickcheck(A(),
                                               [{numtests, ?NUMTESTS},
                                                {constraint_tries, 1000}])).
@@ -70,6 +71,16 @@ prop_cannot_encode_with_no_metrics() ->
             kai_q:q(),
             begin
                 {error, no_metrics} == kai_q:compose(Query, [])
+            end).
+
+t_prop_always_json(_) ->
+    ?PROPTEST(prop_compose_produces_json_terms).
+
+prop_compose_produces_json_terms() ->
+    ?FORALL({Query, Metric}, {kai_q:q(), kai_q:q_metric()},
+            begin
+                Composed = kai_q:compose(Query, Metric),
+                jsx:is_term(Composed)
             end).
 
 t_kai_q_typespecs(_) ->
