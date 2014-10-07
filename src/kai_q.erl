@@ -34,10 +34,12 @@
                              | sum
                              .
 -type aggregator_sampling() :: q_time_val_rel().
+-type aggregator_align()    :: boolean().
 
 -record(q_metric_aggregator, {
-          name     :: aggregator_name(),
-          sampling :: aggregator_sampling()
+          name      :: aggregator_name(),
+          sampling  :: aggregator_sampling(),
+          align     :: aggregator_align()
          }).
 
 -type metric_aggregators() :: [#q_metric_aggregator{}].
@@ -93,16 +95,26 @@ tag(Metric, Tag, V) ->
 
 -spec sum(q_metric(), aggregator_sampling()) ->
     q_metric().
-sum(Metric, {_V,_U}=Sampling) ->
+sum(Metric, Sampling) ->
+    sum(Metric, Sampling, true).
+
+-spec sum(q_metric(), aggregator_sampling(), aggregator_align()) ->
+    q_metric().
+sum(Metric, {_V,_U}=Sampling, Align) ->
     Ags = Metric#q_metric.aggregators,
-    Ag = #q_metric_aggregator{name=sum, sampling=Sampling},
+    Ag = #q_metric_aggregator{name=sum, sampling=Sampling, align=Align},
     Metric#q_metric{aggregators = [Ag|Ags]}.
 
 -spec avg(q_metric(), aggregator_sampling()) ->
     q_metric().
-avg(Metric, {_V, _U}=Sampling) ->
+avg(Metric, Sampling) ->
+    avg(Metric, Sampling, true).
+
+-spec avg(q_metric(), aggregator_sampling(), aggregator_align()) ->
+    q_metric().
+avg(Metric, {_V, _U}=Sampling, Align) ->
     Ags = Metric#q_metric.aggregators,
-    Ag = #q_metric_aggregator{name=avg, sampling=Sampling},
+    Ag = #q_metric_aggregator{name=avg, sampling=Sampling, align=Align},
     Metric#q_metric{aggregators = [Ag|Ags]}.
 
 -spec compose(q(), q_metric() | [q_metric()]) ->
@@ -145,8 +157,8 @@ unwrap_tag({K, V}) ->
 unwrap_aggregators(Ags) ->
     [unwrap_aggregator(Ag) || Ag <- Ags].
 
-unwrap_aggregator(#q_metric_aggregator{name=N, sampling={V,U}}) ->
-    [{name, N},{sampling, [value(V),unit(U)]}].
+unwrap_aggregator(#q_metric_aggregator{name=N, sampling={V,U}, align=Align}) ->
+    [{name, N},{sampling, [value(V),unit(U)]},{align_sampling, Align}].
 
 unwrap(HowTo) ->
     lists:foldr(fun({_Key, undefined, _Unwrap}, AccIn) ->
