@@ -102,7 +102,4 @@ t_put_and_get_latest_metric(Config) ->
             [[{<<"name">>,<<"type">>},{<<"type">>,<<"number">>}]]},
            {<<"tags">>,[{<<"add">>,[<<"tag">>]}]},
            {<<"values">>,
-            Values}]]}]]}] = Results,
-    true = lists:member([Ts1, 1], Values),
-    true = lists:member([Ts2, 2], Values),
-    2    = length(Values).
+            [ [Ts2, 2], [Ts1, 1] ] }]]}]]}] = Results.
