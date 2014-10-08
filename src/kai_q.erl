@@ -3,6 +3,7 @@
 
 -export([new/1, new/2]).
 -export([metric/1, metric/2]).
+-export([order/2]).
 -export([tag/3]).
 -export([sum/2, avg/2]).
 -export([compose/2]).
@@ -26,6 +27,7 @@
                              | q_time_val_abs()
                              | undefined
                              .
+-type metric_order()        :: asc | desc.
 -type metric_tag()          :: binary() | atom().
 -type metric_tag_values()   :: binary() | atom() | [binary() | atom()].
 -type metric_tag_filter()   :: {metric_tag(), metric_tag_values()}.
@@ -47,6 +49,7 @@
 -record(q_metric, {
           name             :: kai:metric_name(),
           limit            :: non_neg_integer(),
+          order            :: metric_order(),
           tags        = [] :: metric_tag_filters(),
           aggregators = [] :: metric_aggregators()
          }).
@@ -84,6 +87,11 @@ metric(Name) ->
     q_metric().
 metric(Name, Limit) ->
     #q_metric{name=Name, limit=Limit}.
+
+-spec order(q_metric(), metric_order()) ->
+    q_metric().
+order(Metric, Order) ->
+    Metric#q_metric{order=Order}.
 
 -spec tag(q_metric(), metric_tag(), metric_tag_values()) ->
     q_metric().
@@ -139,9 +147,10 @@ to_json(#q{start_time=T1, end_time=T2, metrics=M}) ->
 unwrap_metrics(Metrics) ->
     [unwrap_metric(M) || M <- Metrics].
 
-unwrap_metric(#q_metric{name=N, limit=L, tags=T, aggregators=A}) ->
+unwrap_metric(#q_metric{name=N, limit=L, order=O, tags=T, aggregators=A}) ->
     HowTo = [{name,        N, noop},
              {limit,       L, noop},
+             {order,       O, noop},
              {tags,        T, fun unwrap_tags/1},
              {aggregators, A, fun unwrap_aggregators/1}],
     unwrap(HowTo).
