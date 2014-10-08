@@ -20,7 +20,6 @@ suite() ->
 all() -> ?th:all_tests(?MODULE).
 
 init_per_suite(Config) ->
-    random:seed(),
     Config2 = ?th:set_common_data_dir(?MODULE, Config),
     {ok, _} = kai:start(),
     case kai:kairosdb_version() of
@@ -33,9 +32,13 @@ init_per_suite(Config) ->
 end_per_suite(_Config) ->
     ok.
 
-init_per_testcase(_TestCase, Config) ->
-    MetricName = << <<($z-random:uniform(24))>> || _ <- lists:seq(1, 20) >>,
+init_per_testcase(TestCase, Config) ->
+    random:seed(erlang:now()),
+    MRand      = [ $z-random:uniform(24) || _ <- lists:seq(1, 10) ],
+    TestName   = atom_to_binary(TestCase, utf8),
+    MetricName = iolist_to_binary([TestName, "_", MRand]),
     {ok, _} = kai_rest:delete_metric(MetricName),
+    ct:pal("Setting metric name ~s", [MetricName]),
     kvlists:set_value(metric_name, MetricName, Config).
 
 end_per_testcase(_TestCase, Config) ->
@@ -67,46 +70,39 @@ t_put_and_get_metric(Config) ->
     Q1 = ?q:new({5, days}),
     M0 = ?q:metric(mname(Config)),
     Q2 = ?q:compose(Q1, [M0]),
-    case kai:put_metric(MN, 666) of
-        ok ->
-            timer:sleep(1500), %% kairosdb buffer
-            {ok, Results} = kai_rest:query_metrics(Q2),
-            [{<<"queries">>,
-              [[{<<"sample_size">>,1},
-                {<<"results">>,
-                 [[{<<"name">>,MN},
-                   {<<"group_by">>,
-                    [[{<<"name">>,<<"type">>},{<<"type">>,<<"number">>}]]},
-                   {<<"tags">>,[{<<"add">>,[<<"tag">>]}]},
-                   {<<"values">>,[[_Timestamp,666]]}]]}]]}] = Results;
-        {error, {kairosdb, R}} ->
-            {skip, R}
-    end.
+    ok = kai:put_metric(MN, 666),
+    timer:sleep(1000), % kairosdb buffer
+    {ok, Results} = kai_rest:query_metrics(Q2),
+    [{<<"queries">>,
+      [[{<<"sample_size">>,1},
+        {<<"results">>,
+         [[{<<"name">>,MN},
+           {<<"group_by">>,
+            [[{<<"name">>,<<"type">>},{<<"type">>,<<"number">>}]]},
+           {<<"tags">>,[{<<"add">>,[<<"tag">>]}]},
+           {<<"values">>,[[_Timestamp,666]]}]]}]]}] = Results.
 
-t_put_and_get_latest_metric(_) ->
-    Q1 = ?q:new({5, days}),
-    M0 = ?q:metric(<<"latest_metric">>, 1000),
-    M1 = ?q:order(M0, desc),
-    Q2 = ?q:compose(Q1, [M1]),
+t_put_and_get_latest_metric(Config) ->
+    Q1  = ?q:new({5, days}),
+    MN  = mname(Config),
+    M0  = ?q:metric(MN, 1000),
+    M1  = ?q:order(M0, desc),
+    Q2  = ?q:compose(Q1, [M1]),
     Ts1 = kai:now_to_epoch_msecs(),
     Ts2 = Ts1+1,
-    case kai:put_metric(<<"latest_metric">>, Ts1, 1, []) of
-        ok ->
-            case kai:put_metric(<<"latest_metric">>, Ts2, 2, []) of
-                ok ->
-                    timer:sleep(1000),  % write delay
-                    {ok, Results} = kai_rest:query_metrics(Q2),
-                    {ok, no_content} = kai_rest:delete_datapoints(Q2),
-                    [{<<"queries">>,
-                      [[{<<"sample_size">>,2},
-                        {<<"results">>,
-                         [[{<<"name">>,<<"latest_metric">>},
-                           {<<"tags">>,[{<<"add">>,[<<"tag">>]}]},
-                           {<<"values">>,
-                            [[Ts2,2],[Ts1,1]]}]]}]]}] = Results;
-                {error, {kairosdb, R}} ->
-                    {skip, R}
-            end;
-        {error, {kairosdb, R}} ->
-            {skip, R}
-    end.
+    ok  = kai:put_metric(MN, Ts1, 1, []),
+    ok  = kai:put_metric(MN, Ts2, 2, []),
+    timer:sleep(1000), % kairosdb buffer
+    {ok, Results} = kai_rest:query_metrics(Q2),
+    [{<<"queries">>,
+      [[{<<"sample_size">>,2},
+        {<<"results">>,
+         [[{<<"name">>,MN},
+           {<<"group_by">>,
+            [[{<<"name">>,<<"type">>},{<<"type">>,<<"number">>}]]},
+           {<<"tags">>,[{<<"add">>,[<<"tag">>]}]},
+           {<<"values">>,
+            Values}]]}]]}] = Results,
+    true = lists:member([Ts1, 1], Values),
+    true = lists:member([Ts2, 2], Values),
+    2    = length(Values).
