@@ -68,5 +68,13 @@
 
 ## Credits
 
-Thanks to Mahesh Paolini-Subramanya and Ubiquiti Networks for letting me
+### Authors
+
+Adam Rutkowski <hq@mtod.org>
+
+Łukasz Biedrycki <lukasz.biedrycki@gmail.com>
+
+#### Special thanks
+
+Thanks to Mahesh Paolini-Subramanya and Ubiquiti Networks for letting us
 making it an open source project.
