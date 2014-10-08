@@ -25,7 +25,7 @@ delete_datapoints(Q) ->
     call(delete_datapoints, "POST", Q).
 
 delete_metric(Name) ->
-    call(delete_metric, "DELETE", [], Name).
+    call(delete_metric, "DELETE", Name, []).
 
 list_metric_names() ->
     call(list_metric_names, "GET").
@@ -71,6 +71,9 @@ endpoint() ->
     S = kai:env(rest_api_scheme, "http"),
     S ++ "://" ++ H ++ ":" ++ integer_to_list(P).
 
+uri(Method, Suffix)
+  when is_binary(Suffix) ->
+    uri(Method, binary_to_list(Suffix));
 uri(Method, Suffix) ->
     endpoint() ++ ?base ++ method_uri(Method) ++ "/" ++ Suffix.
 
