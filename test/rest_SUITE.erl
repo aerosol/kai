@@ -4,7 +4,8 @@
          init_per_suite/1,
          end_per_suite/1,
          t_simple_query_metric/1,
-         t_put_and_get_metric/1]).
+         t_put_and_get_metric/1,
+         t_put_and_get_latest_metric/1]).
 
 -define(q, kai_q).
 -define(th, test_helpers).
@@ -60,6 +61,34 @@ t_put_and_get_metric(_) ->
                     [[{<<"name">>,<<"type">>},{<<"type">>,<<"number">>}]]},
                    {<<"tags">>,[{<<"add">>,[<<"tag">>]}]},
                    {<<"values">>,[[_Timestamp,666]]}]]}]]}] = Results;
+        {error, {kairosdb, R}} ->
+            {skip, R}
+    end.
+
+t_put_and_get_latest_metric(_) ->
+    Q1 = ?q:new({5, days}),
+    M0 = ?q:metric(<<"latest_metric">>, 1000),
+    M1 = ?q:order(M0, desc),
+    Q2 = ?q:compose(Q1, [M1]),
+    Ts1 = kai:now_to_epoch_msecs(),
+    Ts2 = Ts1+1,
+    case kai:put_metric(<<"latest_metric">>, Ts1, 1, []) of
+        ok ->
+            case kai:put_metric(<<"latest_metric">>, Ts2, 2, []) of
+                ok ->
+                    timer:sleep(1000),  % write delay
+                    {ok, Results} = kai_rest:query_metrics(Q2),
+                    {ok, no_content} = kai_rest:delete_datapoints(Q2),
+                    [{<<"queries">>,
+                      [[{<<"sample_size">>,2},
+                        {<<"results">>,
+                         [[{<<"name">>,<<"latest_metric">>},
+                           {<<"tags">>,[{<<"add">>,[<<"tag">>]}]},
+                           {<<"values">>,
+                            [[Ts2,2],[Ts1,1]]}]]}]]}] = Results;
+                {error, {kairosdb, R}} ->
+                    {skip, R}
+            end;
         {error, {kairosdb, R}} ->
             {skip, R}
     end.
