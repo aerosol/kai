@@ -34,6 +34,7 @@
 -type metric_tag_filters()  :: [metric_tag_filter()].
 -type aggregator_name()     :: avg
                              | sum
+                             | max
                              .
 -type aggregator_sampling() :: q_time_val_rel().
 -type aggregator_align()    :: boolean().
