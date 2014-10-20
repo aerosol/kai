@@ -51,7 +51,7 @@
               - [ ] div
               - [ ] histogram
               - [ ] least_squares
-              - [ ] max
+              - [x] max
               - [ ] min
               - [ ] rate
           - [x] tags support
@@ -61,7 +61,7 @@
               - [ ] value
           - [ ] exclude_tags
           - [x] limit
-          - [ ] order
+          - [x] order
 
   - [ ] Pre-aggregation (TBD)
   - [ ] Load-testing / spammers (TBD)
