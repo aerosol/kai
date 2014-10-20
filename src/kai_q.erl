@@ -5,7 +5,7 @@
 -export([metric/1, metric/2]).
 -export([order/2]).
 -export([tag/3]).
--export([sum/2, avg/2]).
+-export([sum/2, sum/3, avg/2, avg/3, max/2, max/3]).
 -export([compose/2]).
 
 -type q_time_unit()         :: milliseconds
@@ -123,6 +123,18 @@ avg(Metric, Sampling) ->
 avg(Metric, {_V, _U}=Sampling, Align) ->
     Ags = Metric#q_metric.aggregators,
     Ag = #q_metric_aggregator{name=avg, sampling=Sampling, align=Align},
+    Metric#q_metric{aggregators = [Ag|Ags]}.
+
+-spec max(q_metric(), aggregator_sampling()) ->
+    q_metric().
+max(Metric, Sampling) ->
+    max(Metric, Sampling, true).
+
+-spec max(q_metric(), aggregator_sampling(), aggregator_align()) ->
+    q_metric().
+max(Metric, {_V, _U}=Sampling, Align) ->
+    Ags = Metric#q_metric.aggregators,
+    Ag = #q_metric_aggregator{name=max, sampling=Sampling, align=Align},
     Metric#q_metric{aggregators = [Ag|Ags]}.
 
 -spec compose(q(), q_metric() | [q_metric()]) ->
