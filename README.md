@@ -33,7 +33,8 @@
    - [x] Query version
    - [x] Auto-reconnect
        - [ ] Proper back-off on connection errors (currently each connection is delayed to prevent reconnections at the same time)
-   - [x] ELB friendly keep-alive (each connection queries KairosDB for version once in a while)
+   - [x] ELB friendly keep-alive for erlang node-cassandra
+   - [ ] ELB friendly keep-alive for kairos-cassandra
 
 - [ ] REST API (adding data points is not planned, there is no good reason to do it within the scope of this client)
 -   - [ ] custom response wrappers
@@ -43,7 +44,8 @@
       - [x] list tag names
       - [x] list tag values
       - [ ] query metrics
-          - [ ] query builder api - stable (improvements pending)
+          - [x] query builder api - stable (improvements pending)
+          - [ ] validate input as much as possible
           - [ ] aggregates:
               - [x] avg
               - [x] sum
