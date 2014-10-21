@@ -101,6 +101,7 @@ connecting(_Event, _From, State) ->
 
 connected(ping, S1) ->
     lager:debug("KairosDB: PING"),
+    kai:put_metric(<<"dummy">>, 1, 1, []),
     {ok, {kairosdb, _}} = kairos_version(S1),
     lager:debug("KairosDB: PONG"),
     schedule_ping(S1#state.ping),
