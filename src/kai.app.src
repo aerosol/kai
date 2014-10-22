@@ -14,8 +14,10 @@
   {mod, { kai_app, []}},
   {env, [{telnet_api_host, "localhost"},
          {telnet_api_port, 4242},
-         {telnet_api_ping_interval_secs, 30},
          {telnet_connections, 5},
          {rest_api_host, "localhost"},
-         {rest_api_port, 8080}]}
+         {rest_api_port, 8080},
+         {ping_interval_seconds, 30},
+         {ping_types, [telnet_version, read_dummy_metric]}
+         ]}
  ]}.
