@@ -166,7 +166,8 @@ ping(S=#state{ping_types=PingTypes}) ->
                                         pang
                                 end;
                            (read_dummy_metric) ->
-                                Q = kai_q:compose(kai_q:new(1), kai_q:metric(?MODULE)),
+                                M = atom_to_binary(?MODULE, latin1),
+                                Q = kai_q:compose(kai_q:new(1), kai_q:metric(M)),
                                 case kai_rest:query_metrics(Q) of
                                     {ok, _} ->
                                         pong;
