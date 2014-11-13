@@ -100,7 +100,8 @@ request(Method, URI, Payload)
     request(Method, URI, Payload, [{"Content-Type", "application/json"}]).
 
 request(Method, URI, Payload, Headers) ->
-    dlhttpc:request(URI, Method, Headers, Payload, ?HTTP_TIMEOUT).
+    Opts = kai:env(dlhttpc_req_opts),
+    dlhttpc:request(URI, Method, Headers, Payload, ?HTTP_TIMEOUT, Opts).
 
 decode(<<>>) ->
     {ok, no_content};
