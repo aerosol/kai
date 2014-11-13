@@ -19,8 +19,8 @@
          {rest_api_port, 8088},
          {ping_interval_seconds, 30},
          {ping_types, [telnet_version, read_dummy_metric]},
-         {dlhttpc_req_opts, [{max_connections, 200},
-                             {connection_timeout, 10000},
-                             {send_retry, 3}]}
+         {dlhttpc_req_opts, [{max_connections, bypass},
+                             {connection_timeout, 5000},
+                             {send_retry, 2}]}
          ]}
  ]}.
