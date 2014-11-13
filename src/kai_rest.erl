@@ -97,10 +97,10 @@ request(Method, URI, []) ->
     request(Method, URI, [], []);
 request(Method, URI, Payload)
   when is_binary(Payload) ->
-    request(Method, URI, Payload, [{'Content-Type', <<"application/json">>}]).
+    request(Method, URI, Payload, [{"Content-Type", "application/json"}]).
 
 request(Method, URI, Payload, Headers) ->
-    lhttpc:request(URI, Method, Headers, Payload, ?HTTP_TIMEOUT).
+    dlhttpc:request(URI, Method, Headers, Payload, ?HTTP_TIMEOUT).
 
 decode(<<>>) ->
     {ok, no_content};
