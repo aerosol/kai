@@ -9,7 +9,8 @@
                   lager,
                   jsx,
                   kvlists,
-                  dlhttpc
+                  dlhttpc,
+                  folsom
                  ]},
   {mod, { kai_app, []}},
   {env, [{telnet_api_host, "localhost"},
