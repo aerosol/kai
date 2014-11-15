@@ -20,7 +20,7 @@ compile:
 compile-fast:
 	@rebar compile skip_deps=true
 
-test: ct
+test: compile-fast ct
 
 ct:
 	@rebar ct skip_deps=true
