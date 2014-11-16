@@ -30,8 +30,7 @@ init_per_suite(Config) ->
     end.
 
 end_per_suite(_Config) ->
-    ok = folsom:stop(),
-    ok.
+    ok = folsom:stop().
 
 init_per_testcase(TestCase, Config) ->
     random:seed(erlang:now()),
