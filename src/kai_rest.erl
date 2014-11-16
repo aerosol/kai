@@ -64,6 +64,9 @@ call(ApiMethod, HttpMethod, Suffix, Payload) ->
                  {ok, {{Status, _}, _, P}} ->
                      case lists:member(Status, [200, 201, 202, 204]) of
                          true ->
+                             PSize = byte_size(P),
+                             Name = kai_folsom:name_rest_ok_size(ApiMethod),
+                             kai_folsom:notify_hist(Name, PSize),
                              RespPayload = decode(P),
                              Reply = HandleReply(RespPayload),
                              kai_folsom:notify_lat(LatOK),
