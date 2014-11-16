@@ -1,42 +1,6 @@
 -module(kai_folsom).
 -author('Adam Rutkowski <hq@mtod.org>').
 
-%%% kai.rest.query_metrics.OK - spiral
-%%% kai.rest.query_metrics.NOK - spiral
-%%% kai.rest.query_metrics.OK.latency - histogram
-%%% kai.rest.query_metrics.NOK.latency - histogram
-%%% kai.rest.query_metrics.OK.size - spiral
-%%% kai.rest.query_metric_tags.OK - spiral
-%%% kai.rest.query_metric_tags.NOK - spiral
-%%% kai.rest.query_metric_tags.OK.latency - histogram
-%%% kai.rest.query_metric_tags.NOK.latency - histogram
-%%% kai.rest.query_metric_tags.OK.size - spiral
-%%% kai.rest.delete_datapoints.OK - spiral
-%%% kai.rest.delete_datapoints.NOK - spiral
-%%% kai.rest.delete_datapoints.OK.latency - histogram
-%%% kai.rest.delete_datapoints.NOK.latency - histogram
-%%% kai.rest.delete_datapoints.OK.size - spiral
-%%% kai.rest.delete_metric.OK - spiral
-%%% kai.rest.delete_metric.NOK - spiral
-%%% kai.rest.delete_metric.OK.latency - histogram
-%%% kai.rest.delete_metric.NOK.latency - histogram
-%%% kai.rest.delete_metric.OK.size - spiral
-%%% kai.rest.list_metric_names.OK - spiral
-%%% kai.rest.list_metric_names.NOK - spiral
-%%% kai.rest.list_metric_names.OK.latency - histogram
-%%% kai.rest.list_metric_names.NOK.latency - histogram
-%%% kai.rest.list_metric_names.OK.size - spiral
-%%% kai.rest.list_tag_names.OK - spiral
-%%% kai.rest.list_tag_names.NOK - spiral
-%%% kai.rest.list_tag_names.OK.latency - histogram
-%%% kai.rest.list_tag_names.NOK.latency - histogram
-%%% kai.rest.list_tag_names.OK.size - spiral
-%%% kai.rest.list_tag_values.OK - spiral
-%%% kai.rest.list_tag_values.NOK - spiral
-%%% kai.rest.list_tag_values.OK.latency - histogram
-%%% kai.rest.list_tag_values.NOK.latency - histogram
-%%% kai.rest.list_tag_values.OK.size - spiral
-
 -export([init_static_metrics/0]).
 
 -export([name_rest_ok/1,
@@ -60,21 +24,25 @@
                          list_tag_values]).
 
 init_static_metrics() ->
-    Xs = [begin
+    _ = [begin
          N1 = name_rest_ok(Call),
          N2 = name_rest_nok(Call),
          N3 = name_rest_ok_lat(Call),
          N4 = name_rest_nok_lat(Call),
-         R1 = folsom_metrics:new_spiral(N1),
-         lager:debug("Initializing spiral ~s (~p)", [N1, R1]),
-         R2 = folsom_metrics:new_spiral(N2),
-         lager:debug("Initializing spiral ~s (~p)", [N2, R2]),
-         R3 = folsom_metrics:new_histogram(N3),
-         lager:debug("Initializing histogram ~s (~p)", [N3, R3]),
-         R4 = folsom_metrics:new_histogram(N4),
-         lager:debug("Initializing histogram ~s (~p)", [N4, R4])
+         N5 = name_rest_ok_size(Call),
+         ok = folsom_metrics:new_spiral(N1),
+         lager:debug("Initializing spiral ~s (~p)", [N1]),
+         ok = folsom_metrics:new_spiral(N2),
+         lager:debug("Initializing spiral ~s (~p)", [N2]),
+         ok = folsom_metrics:new_histogram(N3),
+         lager:debug("Initializing histogram ~s (~p)", [N3]),
+         ok = folsom_metrics:new_histogram(N4),
+         lager:debug("Initializing histogram ~s (~p)", [N4]),
+         ok = folsom_metrics:new_histogram(N5),
+         lager:debug("Initializing histogram ~s (~p)", [N5])
      end || Call <- ?REST_ENDPOINTS],
-    true = lists:all(fun(ok) -> true end, Xs),
+    N5 = name_writes(),
+    ok = folsom_metrics:new_spiral(N5),
     ok.
 
 
