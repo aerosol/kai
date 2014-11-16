@@ -9,15 +9,19 @@
                   lager,
                   jsx,
                   kvlists,
-                  lhttpc
+                  dlhttpc,
+                  folsom
                  ]},
   {mod, { kai_app, []}},
   {env, [{telnet_api_host, "localhost"},
          {telnet_api_port, 4242},
          {telnet_connections, 5},
          {rest_api_host, "localhost"},
-         {rest_api_port, 8080},
+         {rest_api_port, 8088},
          {ping_interval_seconds, 30},
-         {ping_types, [telnet_version, read_dummy_metric]}
+         {ping_types, [telnet_version, read_dummy_metric]},
+         {dlhttpc_req_opts, [{max_connections, bypass},
+                             {connection_timeout, 5000},
+                             {send_retry, 2}]}
          ]}
  ]}.

@@ -18,7 +18,7 @@
 
 -include_lib("proper/include/proper.hrl").
 
--define(NUMTESTS, 1000).
+-define(NUMTESTS, 500).
 -define(PROPTEST(A), true = proper:quickcheck(A(),
                                               [{numtests, ?NUMTESTS},
                                                {constraint_tries, 1000}])).
@@ -29,7 +29,8 @@ init_per_suite(Config) ->
     Config2.
 
 end_per_suite(_Config) ->
-    ok = kai:stop().
+    ok = kai:stop(),
+    ok = folsom:stop().
 
 suite() ->
     [{timetrap,{seconds,30}}].

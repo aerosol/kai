@@ -6,6 +6,7 @@
 -export([start/2, stop/1]).
 
 start(_StartType, _StartArgs) ->
+    ok = kai_folsom:init_static_metrics(),
     {ok, TopSup} = kai_sup:start_link(),
     ok = case kai:env(telnet_connections, 0) of
              N when is_integer(N) andalso N > 0 ->

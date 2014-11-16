@@ -49,18 +49,36 @@ call(ApiMethod, HttpMethod, Payload)
 call(ApiMethod, HttpMethod, Suffix, Payload) ->
     URI = uri(ApiMethod, Suffix),
     HandleReply = reply_handler(ApiMethod, HttpMethod),
-    case request(HttpMethod, URI, Payload) of
-        {error, R} ->
-            {error, {kairosdb, R}};
-        {ok, {{Status, _}, _, P}} ->
-            case lists:member(Status, [200, 201, 202, 204]) of
-                true ->
-                    RespPayload = decode(P),
-                    HandleReply(RespPayload);
-                false ->
-                    {error, {kairosdb, {Status, P}}}
-            end
-    end.
+
+    LatOK  = kai_folsom:begin_rest_ok_lat(ApiMethod),
+    LatNOK = kai_folsom:begin_rest_nok_lat(ApiMethod),
+
+    SpiOK  = kai_folsom:name_rest_ok(ApiMethod),
+    SpiNOK = kai_folsom:name_rest_nok(ApiMethod),
+
+    Result = case request(HttpMethod, URI, Payload) of
+                 {error, R} ->
+                     kai_folsom:notify_lat(LatNOK),
+                     kai_folsom:notify_spiral(SpiNOK),
+                     {error, {kairosdb, R}};
+                 {ok, {{Status, _}, _, P}} ->
+                     case lists:member(Status, [200, 201, 202, 204]) of
+                         true ->
+                             PSize = byte_size(P),
+                             Name = kai_folsom:name_rest_ok_size(ApiMethod),
+                             kai_folsom:notify_hist(Name, PSize),
+                             RespPayload = decode(P),
+                             Reply = HandleReply(RespPayload),
+                             kai_folsom:notify_lat(LatOK),
+                             kai_folsom:notify_spiral(SpiOK),
+                             Reply;
+                         false ->
+                             kai_folsom:lat_notify(LatNOK),
+                             kai_folsom:notify_spiral(SpiNOK),
+                             {error, {kairosdb, {Status, P}}}
+                     end
+             end,
+    Result.
 
 
 %% Internals
@@ -97,10 +115,11 @@ request(Method, URI, []) ->
     request(Method, URI, [], []);
 request(Method, URI, Payload)
   when is_binary(Payload) ->
-    request(Method, URI, Payload, [{'Content-Type', <<"application/json">>}]).
+    request(Method, URI, Payload, [{"Content-Type", "application/json"}]).
 
 request(Method, URI, Payload, Headers) ->
-    lhttpc:request(URI, Method, Headers, Payload, ?HTTP_TIMEOUT).
+    Opts = kai:env(dlhttpc_req_opts),
+    dlhttpc:request(URI, Method, Headers, Payload, ?HTTP_TIMEOUT, Opts).
 
 decode(<<>>) ->
     {ok, no_content};
