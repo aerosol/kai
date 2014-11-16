@@ -93,16 +93,16 @@ notify_spiral(Name) ->
     ok = folsom_metrics:notify({Name, 1}).
 
 name_rest_ok(Call) when is_atom(Call) ->
-    <<?REST, (bin(Call))/binary, "OK">>.
+    <<?REST, (bin(Call))/binary, ".OK">>.
 
 name_rest_nok(Call) when is_atom(Call) ->
-    <<?REST, (bin(Call))/binary, "NOK">>.
+    <<?REST, (bin(Call))/binary, ".NOK">>.
 
 name_rest_ok_lat(Call) when is_atom(Call) ->
-    <<?REST, (bin(Call))/binary, "OK.latency">>.
+    <<?REST, (bin(Call))/binary, ".OK.latency">>.
 
 name_rest_nok_lat(Call) when is_atom(Call) ->
-    <<?REST, (bin(Call))/binary, "NOK.latency">>.
+    <<?REST, (bin(Call))/binary, ".NOK.latency">>.
 
 bin(A) when is_atom(A) ->
     erlang:atom_to_binary(A, latin1).
