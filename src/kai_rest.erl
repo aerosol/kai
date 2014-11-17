@@ -73,7 +73,7 @@ call(ApiMethod, HttpMethod, Suffix, Payload) ->
                              kai_folsom:notify_spiral(SpiOK),
                              Reply;
                          false ->
-                             kai_folsom:lat_notify(LatNOK),
+                             kai_folsom:notify_lat(LatNOK),
                              kai_folsom:notify_spiral(SpiNOK),
                              {error, {kairosdb, {Status, P}}}
                      end
