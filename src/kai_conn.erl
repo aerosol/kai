@@ -34,7 +34,8 @@
                  port          :: non_neg_integer(),
                  socket        :: port(),
                  ping          :: non_neg_integer(),
-                 ping_types    :: ping_types() }).
+                 ping_types    :: ping_types(),
+                 opts          :: term() }).
 
 -define(TCP_OPTS, [binary,{active, false},
                    {packet, line},{keepalive, true}]).
@@ -67,7 +68,7 @@ version(Conn) ->
 %%% gen_fsm callbacks
 %%%===================================================================
 
-init([H, P, _Opts]) ->
+init([H, P, _]) ->
     PI = case kai:env(ping_interval_seconds) of
              I when is_integer(I) ->
                  lager:info("KairosDB scheduling ping in ~w secs", [I]),
@@ -76,28 +77,29 @@ init([H, P, _Opts]) ->
                  undefined
          end,
     PT = kai:env(ping_types, [telnet_version]),
-    S = #state{host = H, port = P, ping = PI, ping_types = PT},
-    try_connect(S, ?TCP_OPTS).
+    S = #state{host = H, port = P, ping = PI, ping_types = PT, opts=?TCP_OPTS},
+    try_connect(S).
 
-try_connect(S = #state{host=H, port=P}, Opts) ->
+try_connect(S = #state{host=H, port=P, opts=Opts}) ->
     case kairos_connect(S, Opts) of
         {ok, S2} ->
             schedule_ping(S),
-            ok = kai_pool:join(),
+            kai_pool:join(),
             {ok, connected, S2};
         {error, R} ->
+            kai_pool:leave(),
             lager:warning("Could not connect to KairoDB at ~s:~w due to ~p",
                          [H, P, R]),
-            schedule_reconnect(Opts),
+            _ = schedule_reconnect(),
             {ok, connecting, S}
     end.
 
-connecting({reconnect, Opts}, S1) ->
-    case try_connect(S1, Opts) of
+connecting(reconnect, S1=#state{}) ->
+    case try_connect(S1) of
         {ok, connected, S2} ->
             {next_state, connected, S2};
         {ok, connecting, S1} ->
-            schedule_reconnect(Opts),
+            _ = schedule_reconnect(),
             {next_state, connecting, S1}
     end.
 
@@ -106,9 +108,17 @@ connecting(_Event, _From, State) ->
     {reply, Reply, connecting, State}.
 
 connected(ping, S1) ->
-    {ok, _} = ping(S1),
-    schedule_ping(S1),
-    {next_state, connected, S1};
+    case ping(S1) of
+        {ok, pong} ->
+            schedule_ping(S1),
+            {next_state, connected, S1};
+        {error, {pang, read_dummy_metric}} ->
+            {next_state, connected, S1};
+        {error, {pang, telnet_version}} ->
+            _ = schedule_reconnect(),
+            S2 = close_connection(S1),
+            {next_state, connecting, S2}
+    end;
 connected(_, S1) ->
     {next_state, connected, S1}.
 
@@ -150,8 +160,14 @@ code_change(_OldVsn, StateName, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
-schedule_reconnect(Opts) ->
-    gen_fsm:send_event_after(?RECONNECT_TIME_MSECS, {reconnect, Opts}).
+schedule_reconnect() ->
+    lager:info("Reconnecting to KairosDB in ~w", [?RECONNECT_TIME_MSECS]),
+    gen_fsm:send_event_after(?RECONNECT_TIME_MSECS, reconnect).
+
+close_connection(#state{socket=Sock}=State) ->
+    _ = gen_tcp:close(Sock),
+    kai_pool:leave(),
+    State#state{socket=undefined}.
 
 schedule_ping(#state{ping=undefined}) ->
     ok;
@@ -160,41 +176,47 @@ schedule_ping(#state{ping=Interval, ping_types=Types})
     gen_fsm:send_event_after(Interval, ping).
 
 ping(S=#state{ping_types=PingTypes}) ->
-    Replies = lists:map(fun(telnet_version) ->
-                                case kairos_version(S) of
-                                    {ok, {kairosdb, _}} ->
-                                        pong;
-                                    _ ->
-                                        pang
-                                end;
-                           (read_dummy_metric) ->
-                                M = atom_to_binary(?MODULE, latin1),
-                                Q = kai_q:compose(kai_q:new(1), kai_q:metric(M)),
-                                case kai_rest:query_metrics(Q) of
-                                    {ok, _} ->
-                                        pong;
-                                    _ ->
-                                        pang
-                                end
-                        end, PingTypes),
-    Info = lists:zip(PingTypes, Replies),
-    case lists:member(pang, Replies) of
-        true ->
-            lager:warning("KairosDB PANG: ~p", [Info]),
-            {error, Info};
-        false ->
-            {ok, Info}
+    case do_ping(PingTypes, S) of
+        {pang, _}=Pang ->
+            {error, Pang};
+        pong ->
+            {ok, pong}
+    end.
+
+do_ping([], _) ->
+    pong;
+do_ping([telnet_version=T|Next], S=#state{}) ->
+    case kairos_version(S) of
+        {ok, {kairosdb, _}} ->
+            do_ping(Next, S);
+        _ ->
+            lager:error("KairosDB PANG: ~s", [T]),
+            {pang, T}
+    end;
+do_ping([read_dummy_metric=T|Next], S) ->
+    M = atom_to_binary(?MODULE, latin1),
+    Q = kai_q:compose(kai_q:new(1), kai_q:metric(M)),
+    case kai_rest:query_metrics(Q) of
+        {ok, _} ->
+            do_ping(Next, S);
+        _ ->
+            lager:error("KairosDB PANG: ~s", [T]),
+            {pang, T}
     end.
 
 
 kairos_version(S1) ->
     Raw = kai_proto:version(),
-    ok = send(Raw, S1),
-    case kairos_wait_reply(S1) of
-        Data when is_binary(Data) ->
-            {ok, {kairosdb, Data}};
-        {error, _}=E ->
-            E
+    case send(Raw, S1) of
+        ok ->
+            case kairos_wait_reply(S1) of
+                Data when is_binary(Data) ->
+                    {ok, {kairosdb, Data}};
+                {error, _}=E ->
+                    E
+            end;
+        {error, R} ->
+            {error, {kairosdb, R}}
     end.
 
 kairos_wait_reply(#state{socket = Socket}) ->
