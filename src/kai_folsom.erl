@@ -21,6 +21,11 @@
          notify_spiral/1,
          notify_hist/2]).
 
+-export([notify_pong/0,
+         notify_pang/0,
+         notify_write_ok/0,
+         notify_write_nok/0]).
+
 -define(REST   , "kai.rest.").
 -define(TELNET , "kai.telnet.").
 
@@ -64,6 +69,22 @@ begin_rest_nok_lat(Call) ->
 
 notify_lat(LatMetric) ->
     ok = folsom_metrics:histogram_timed_notify(LatMetric).
+
+notify_pong() ->
+    Name = name_pong(),
+    notify_spiral(Name).
+
+notify_pang() ->
+    Name = name_pang(),
+    notify_spiral(Name).
+
+notify_write_ok() ->
+    Name = name_writes_ok(),
+    notify_spiral(Name).
+
+notify_write_nok() ->
+    Name = name_writes_nok(),
+    notify_spiral(Name).
 
 notify_spiral(Name) ->
     ok = folsom_metrics:notify({Name, 1}).

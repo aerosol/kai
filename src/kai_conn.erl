@@ -131,12 +131,10 @@ connected({put_metric = Cmd, {M, TS, V, Tags}}, _From, S1) ->
     Raw = kai_proto:Cmd(M, TS, V, Tags),
     case send(Raw, S1) of
         ok ->
-            Name = kai_folsom:name_writes_ok(),
-            kai_folsom:notify_spiral(Name),
+            kai_folsom:notify_write_ok(),
             {reply, ok, connected, S1};
         {error, _}=E ->
-            Name = kai_folsom:name_writes_nok(),
-            kai_folsom:notify_spiral(Name),
+            kai_folsom:notify_write_nok(),
             _ = schedule_reconnect(),
             S2 = close_connection(S1),
             {reply, E, connecting, S2}
@@ -200,13 +198,11 @@ do_ping([], _) ->
 do_ping([telnet_version=T|Next], S=#state{}) ->
     case kairos_version(S) of
         {ok, {kairosdb, _}} ->
-            Name = kai_folsom:name_ping(pong),
-            kai_folsom:notify_spiral(Name),
+            kai_folsom:notify_pong(),
             do_ping(Next, S);
         _ ->
             lager:error("KairosDB PANG: ~s", [T]),
-            Name = kai_folsom:name_ping(pang),
-            kai_folsom:notify_spiral(Name),
+            kai_folsom:notify_pang(),
             {pang, T}
     end;
 do_ping([read_dummy_metric=T|Next], S) ->
