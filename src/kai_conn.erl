@@ -164,8 +164,10 @@ schedule_reconnect() ->
     lager:info("Reconnecting to KairosDB in ~w", [?RECONNECT_TIME_MSECS]),
     gen_fsm:send_event_after(?RECONNECT_TIME_MSECS, reconnect).
 
+close_connection(#state{socket=undefined}=State) ->
+    State;
 close_connection(#state{socket=Sock}=State) ->
-    _ = gen_tcp:close(Sock),
+    ok = gen_tcp:close(Sock),
     kai_pool:leave(),
     State#state{socket=undefined}.
 
