@@ -101,7 +101,9 @@ connecting(reconnect, S1=#state{}) ->
         {ok, connecting, S1} ->
             _ = schedule_reconnect(),
             {next_state, connecting, S1}
-    end.
+    end;
+connecting(ping, S1) ->
+    {next_state, connecting, S1}.
 
 connecting(_Event, _From, State) ->
     Reply = {error, connecting},
