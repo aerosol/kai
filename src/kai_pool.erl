@@ -4,6 +4,7 @@
 -export([init/1]).
 -export([fetch/0]).
 -export([join/0]).
+-export([leave/0]).
 
 -define(POOL, ?MODULE).
 
@@ -14,7 +15,7 @@ init(N) ->
     spawn_connections(N).
 
 join() ->
-    pg2:join(?POOL, self()).
+    ok = pg2:join(?POOL, self()).
 
 fetch() ->
     case pg2:get_closest_pid(?POOL) of
@@ -25,6 +26,9 @@ fetch() ->
         {error, _}=E ->
             E
     end.
+
+leave() ->
+    ok = pg2:leave(?POOL, self()).
 
 spawn_connections(N) ->
     [ begin
