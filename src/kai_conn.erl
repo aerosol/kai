@@ -130,10 +130,12 @@ connected({put_metric = Cmd, {M, TS, V, Tags}}, _From, S1) ->
     Reply = case send(Raw, S1) of
         ok ->
             Name = kai_folsom:name_writes_ok(),
-            kai_folsom:notify_spiral(Name);
-        {error, _} ->
+            kai_folsom:notify_spiral(Name),
+            ok;
+        {error, _}=E ->
             Name = kai_folsom:name_writes_nok(),
-            kai_folsom:notify_spiral(Name)
+            kai_folsom:notify_spiral(Name),
+            E
     end,
     {reply, Reply, connected, S1};
 connected(_Event, _From, State) ->
