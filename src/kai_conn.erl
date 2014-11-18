@@ -131,13 +131,14 @@ connected({put_metric = Cmd, {M, TS, V, Tags}}, _From, S1) ->
         ok ->
             Name = kai_folsom:name_writes_ok(),
             kai_folsom:notify_spiral(Name),
-            ok;
+            {reply, ok, connected, S1};
         {error, _}=E ->
             Name = kai_folsom:name_writes_nok(),
             kai_folsom:notify_spiral(Name),
-            E
-    end,
-    {reply, Reply, connected, S1};
+            _ = schedule_reconnect(),
+            S2 = close_connection(S1),
+            {reply, E, connecting, S2}
+    end;
 connected(_Event, _From, State) ->
     Reply = {error, unknown_call},
     {reply, Reply, connected, State}.
