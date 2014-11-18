@@ -190,9 +190,13 @@ do_ping([], _) ->
 do_ping([telnet_version=T|Next], S=#state{}) ->
     case kairos_version(S) of
         {ok, {kairosdb, _}} ->
+            Name = kai_folsom:name_ping(pong),
+            kai_folsom:notify_spiral(Name),
             do_ping(Next, S);
         _ ->
             lager:error("KairosDB PANG: ~s", [T]),
+            Name = kai_folsom:name_ping(pang),
+            kai_folsom:notify_spiral(Name),
             {pang, T}
     end;
 do_ping([read_dummy_metric=T|Next], S) ->

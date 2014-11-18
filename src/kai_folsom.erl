@@ -9,7 +9,8 @@
          name_rest_nok_lat/1,
          name_rest_ok_size/1]).
 
--export([name_writes/0]).
+-export([name_writes/0,
+         name_ping/1]).
 
 -export([begin_rest_ok_lat/1,
          begin_rest_nok_lat/1]).
@@ -47,7 +48,11 @@ init_static_metrics() ->
          ok = folsom_metrics:new_histogram(N5)
      end || Call <- ?REST_ENDPOINTS],
     N5 = name_writes(),
-    ok = folsom_metrics:new_spiral(N5).
+    ok = folsom_metrics:new_spiral(N5),
+    N6 = name_ping(pang),
+    N7 = name_ping(pong),
+    ok = folsom_metrics:new_spiral(N6),
+    ok = folsom_metrics:new_spiral(N7).
 
 
 begin_rest_ok_lat(Call) ->
@@ -84,6 +89,11 @@ name_rest_ok_size(Call) when is_atom(Call) ->
 
 name_writes() ->
     <<?TELNET, "writes">>.
+
+name_ping(pong) ->
+    <<?TELNET, "ping.pong">>;
+name_ping(pang) ->
+    <<?TELNET, "ping.pang">>.
 
 bin(A) when is_atom(A) ->
     erlang:atom_to_binary(A, latin1).
