@@ -21,7 +21,7 @@
          {ping_interval_seconds, 30},
          {ping_types, [telnet_version, read_dummy_metric]},
          {dlhttpc_req_opts, [{max_connections, bypass},
-                             {connection_timeout, 5000},
+                             {connect_timeout, 5000},
                              {send_retry, 2}]}
          ]}
  ]}.
