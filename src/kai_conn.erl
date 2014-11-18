@@ -127,7 +127,7 @@ connected(version, _From, S1) ->
     {reply, Reply, connected, S1};
 connected({put_metric = Cmd, {M, TS, V, Tags}}, _From, S1) ->
     Raw = kai_proto:Cmd(M, TS, V, Tags),
-    Reply = case send(Raw, S1) of
+    case send(Raw, S1) of
         ok ->
             Name = kai_folsom:name_writes_ok(),
             kai_folsom:notify_spiral(Name),
