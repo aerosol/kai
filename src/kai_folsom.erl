@@ -9,8 +9,10 @@
          name_rest_nok_lat/1,
          name_rest_ok_size/1]).
 
--export([name_writes/0,
-         name_ping/1]).
+-export([name_writes_ok/0,
+         name_writes_nok/0,
+         name_pong/0,
+         name_pang/0]).
 
 -export([begin_rest_ok_lat/1,
          begin_rest_nok_lat/1]).
@@ -47,12 +49,14 @@ init_static_metrics() ->
          lager:debug("Initializing histogram ~s", [N5]),
          ok = folsom_metrics:new_histogram(N5)
      end || Call <- ?REST_ENDPOINTS],
-    N5 = name_writes(),
+    N5 = name_writes_ok(),
+    N6 = name_writes_nok(),
     ok = folsom_metrics:new_spiral(N5),
-    N6 = name_ping(pang),
-    N7 = name_ping(pong),
     ok = folsom_metrics:new_spiral(N6),
-    ok = folsom_metrics:new_spiral(N7).
+    N7 = name_pong(),
+    N8 = name_pang(),
+    ok = folsom_metrics:new_spiral(N7),
+    ok = folsom_metrics:new_spiral(N8).
 
 
 begin_rest_ok_lat(Call) ->
@@ -87,12 +91,16 @@ name_rest_nok_lat(Call) when is_atom(Call) ->
 name_rest_ok_size(Call) when is_atom(Call) ->
     <<?REST, (bin(Call))/binary, ".OK.size">>.
 
-name_writes() ->
-    <<?TELNET, "writes">>.
+name_writes_ok() ->
+    <<?TELNET, "writes.OK">>.
 
-name_ping(pong) ->
-    <<?TELNET, "ping.pong">>;
-name_ping(pang) ->
+name_writes_nok() ->
+    <<?TELNET, "writes.NOK">>.
+
+name_pong() ->
+    <<?TELNET, "ping.pong">>.
+
+name_pang() ->
     <<?TELNET, "ping.pang">>.
 
 bin(A) when is_atom(A) ->

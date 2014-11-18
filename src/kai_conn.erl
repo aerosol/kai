@@ -127,9 +127,14 @@ connected(version, _From, S1) ->
     {reply, Reply, connected, S1};
 connected({put_metric = Cmd, {M, TS, V, Tags}}, _From, S1) ->
     Raw = kai_proto:Cmd(M, TS, V, Tags),
-    Reply = send(Raw, S1),
-    Name = kai_folsom:name_writes(),
-    kai_folsom:notify_spiral(Name),
+    Reply = case send(Raw, S1) of
+        ok ->
+            Name = kai_folsom:name_writes_ok(),
+            kai_folsom:notify_spiral(Name);
+        {error, _} ->
+            Name = kai_folsom:name_writes_nok(),
+            kai_folsom:notify_spiral(Name)
+    end,
     {reply, Reply, connected, S1};
 connected(_Event, _From, State) ->
     Reply = {error, unknown_call},
