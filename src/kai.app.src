@@ -14,4 +14,5 @@
                     {dlhttpc_req_opts,[{max_connections,bypass},
                                        {connect_options, [{reuseaddr, true}]},
                                        {connect_timeout,5000},
+                                       {checkout_retry, 5},
                                        {send_retry,2}]}]}]}.
