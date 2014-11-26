@@ -40,7 +40,7 @@
 -define(TCP_OPTS, [binary,{active, false},
                    {packet, line},{keepalive, true}]).
 
--define(RECONNECT_TIME_MSECS , 5000).
+-define(RECONNECT_TIME_MSECS , 1000).
 -define(TCP_RECV_LEN         , 0).
 -define(TCP_RECV_TIMEOUT     , 5000).
 
@@ -156,11 +156,15 @@ handle_sync_event(Event, _From, StateName, State) ->
     Reply = {error, {unknown_event, Event}},
     {reply, Reply, StateName, State}.
 
-handle_info(_Info, _StateName, S1) ->
+handle_info({'EXIT', _, _}=Info, _StateName, S1) ->
     close_connection(S1),
-    {stop, normal, ok, S1}.
+    {stop, {crash, Info}, S1};
+handle_info(Info, _, S1) ->
+    lager:error("Unexpected message: ~p", [Info]),
+    {noreply, S1}.
 
-terminate(_Reason, _StateName, #state{}=S1) ->
+terminate(Reason, _StateName, #state{}=S1) ->
+    lager:info("Kairosdb connection terminating: ~p", [Reason]),
     close_connection(S1),
     ok.
 
