@@ -42,7 +42,7 @@
 
 -define(RECONNECT_TIME_MSECS , 1000).
 -define(TCP_RECV_LEN         , 0).
--define(TCP_RECV_TIMEOUT     , 5000).
+-define(TCP_RECV_TIMEOUT     , 2500).
 
 start_link() ->
     {H, P} = endpoint(),
