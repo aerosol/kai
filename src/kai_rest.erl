@@ -11,7 +11,7 @@
         ]).
 
 -define(base         , "/api/v1/").
--define(HTTP_TIMEOUT , 10000).
+-define(HTTP_TIMEOUT , timer:seconds(15)).
 
 %% Rest API
 
